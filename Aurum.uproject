@@ -7,7 +7,14 @@
 		{
 			"Name": "Aurum",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"CoreUObject",
+				"Engine",
+				"NinjaInput",
+				"Mover",
+				"GameplayAbilities"
+			]
 		}
 	],
 	"Plugins": [
