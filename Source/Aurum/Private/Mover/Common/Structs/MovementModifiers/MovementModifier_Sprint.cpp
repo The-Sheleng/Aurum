@@ -9,47 +9,51 @@
 #include "Mover/Objects/SharedSettings/MovementSettings_Gait.h"
 #include "Pawns/AurumCharacter.h"
 
-void FMovementModifier_Sprint::OnStart(UMoverComponent* MoverComp, const FMoverTimeStep& TimeStep,
-	const FMoverSyncState& SyncState, const FMoverAuxStateContext& AuxState)
-{
-	const float CurrentMovementCos = GetMovementCos(MoverComp);
-
-	CachedMovementCos = CurrentMovementCos;
-	UpdateMovementSettings(MoverComp);
-}
-
-void FMovementModifier_Sprint::OnPreMovement(UMoverComponent* MoverComp, const FMoverTimeStep& TimeStep)
-{
-	const float CurrentMovementCos = GetMovementCos(MoverComp);
-
-	if (FMath::Abs(CurrentMovementCos - CachedMovementCos) > KINDA_SMALL_NUMBER)
-	{
-		CachedMovementCos = CurrentMovementCos;
-		UpdateMovementSettings(MoverComp);
-	}
-}
-
-void FMovementModifier_Sprint::OnEnd(
-	UMoverComponent* MoverComp,
+void FMovementModifier_Sprint::OnStart(UMoverComponent* MoverComponent, 
 	const FMoverTimeStep& TimeStep,
 	const FMoverSyncState& SyncState, 
 	const FMoverAuxStateContext& AuxState)
 {
-	RevertMovementSettings(MoverComp);
+	const float CurrentMovementCos = GetMovementCos(MoverComponent);
+
+	CachedMovementCos = CurrentMovementCos;
+	UpdateMovementSettings(MoverComponent);
 }
 
-float FMovementModifier_Sprint::GetMovementCos(const UMoverComponent* MoverComp)
+void FMovementModifier_Sprint::OnPreMovement(
+	UMoverComponent* MoverComponent,
+	const FMoverTimeStep& TimeStep)
 {
-	const FVector CharacterForward = MoverComp->GetOwner()->GetActorForwardVector();
-	const FVector MovementVelocityDir = MoverComp->GetVelocity().GetSafeNormal();
+	const float CurrentMovementCos = GetMovementCos(MoverComponent);
+
+	if (FMath::Abs(CurrentMovementCos - CachedMovementCos) > KINDA_SMALL_NUMBER)
+	{
+		CachedMovementCos = CurrentMovementCos;
+		UpdateMovementSettings(MoverComponent);
+	}
+}
+
+void FMovementModifier_Sprint::OnEnd(
+	UMoverComponent* MoverComponent,
+	const FMoverTimeStep& TimeStep,
+	const FMoverSyncState& SyncState, 
+	const FMoverAuxStateContext& AuxState)
+{
+	RevertMovementSettings(MoverComponent);
+}
+
+float FMovementModifier_Sprint::GetMovementCos(const UMoverComponent* MoverComponent)
+{
+	const FVector CharacterForward = MoverComponent->GetOwner()->GetActorForwardVector();
+	const FVector MovementVelocityDir = MoverComponent->GetVelocity().GetSafeNormal();
 
 	return FVector::DotProduct(CharacterForward, MovementVelocityDir);
 }
 
-void FMovementModifier_Sprint::UpdateMovementSettings(UMoverComponent* MoverComp)
+void FMovementModifier_Sprint::UpdateMovementSettings(UMoverComponent* MoverComponent)
 {
 	/** Validity check and settings. */
-    const UMovementSettings_Gait* SprintSettings = MoverComp->FindSharedSettings_Mutable<UMovementSettings_Gait>();
+    const UMovementSettings_Gait* SprintSettings = MoverComponent->FindSharedSettings_Mutable<UMovementSettings_Gait>();
     if (!ensure(IsValid(SprintSettings))) return;
 
 	/**
@@ -63,18 +67,18 @@ void FMovementModifier_Sprint::UpdateMovementSettings(UMoverComponent* MoverComp
 		if (bIsSprintSuppressed) return;
 		
 		bIsSprintSuppressed = true;
-		RevertMovementSettings(MoverComp);
+		RevertMovementSettings(MoverComponent);
 
 		return;
 	}
 	
 	bIsSprintSuppressed = false;
 	
-    UCommonLegacyMovementSettings* ActiveMovementSettings = 
-    	MoverComp->FindSharedSettings_Mutable<UCommonLegacyMovementSettings>();
+    UCommonLegacyMovementSettings* ActiveMovementSettings 
+		= MoverComponent->FindSharedSettings_Mutable<UCommonLegacyMovementSettings>();
     if (!ensure(IsValid(ActiveMovementSettings))) return;
 	
-	const UCommonLegacyMovementSettings* DefaultMovementSettings = GetDefaultMovementSettings(MoverComp);
+	const UCommonLegacyMovementSettings* DefaultMovementSettings = GetDefaultMovementSettings(MoverComponent);
     if (!ensure(IsValid(DefaultMovementSettings))) return;
 
 	/**
@@ -95,14 +99,14 @@ void FMovementModifier_Sprint::UpdateMovementSettings(UMoverComponent* MoverComp
     ActiveMovementSettings->TurningRate = SprintSettings->SprintTurningRateOverride;
 }
 
-void FMovementModifier_Sprint::RevertMovementSettings(UMoverComponent* MoverComp)
+void FMovementModifier_Sprint::RevertMovementSettings(UMoverComponent* MoverComponent)
 {
 	/** Validity check and settings. */
 	UCommonLegacyMovementSettings* MovementSettings =
-		MoverComp->FindSharedSettings_Mutable<UCommonLegacyMovementSettings>();
+		MoverComponent->FindSharedSettings_Mutable<UCommonLegacyMovementSettings>();
 	if (!ensure(IsValid(MovementSettings))) return;
 	
-	const UCommonLegacyMovementSettings* DefaultMovementSettings = GetDefaultMovementSettings(MoverComp);
+	const UCommonLegacyMovementSettings* DefaultMovementSettings = GetDefaultMovementSettings(MoverComponent);
 	if (!ensure(IsValid(DefaultMovementSettings))) return;
 	
 	/** Apply modifiers. */
@@ -112,9 +116,10 @@ void FMovementModifier_Sprint::RevertMovementSettings(UMoverComponent* MoverComp
 	MovementSettings->TurningRate = DefaultMovementSettings->TurningRate;
 }
 
-const UCommonLegacyMovementSettings* FMovementModifier_Sprint::GetDefaultMovementSettings(const UMoverComponent* MoverComp)
+const UCommonLegacyMovementSettings* FMovementModifier_Sprint::GetDefaultMovementSettings(
+	const UMoverComponent* MoverComponent)
 {
-	const AAurumCharacter* CharacterCDO = MoverComp->GetOwner()->GetClass()->GetDefaultObject<AAurumCharacter>();
+	const AAurumCharacter* CharacterCDO = MoverComponent->GetOwner()->GetClass()->GetDefaultObject<AAurumCharacter>();
 	const UAurumMoverComponent* MoverComponentCDO = CharacterCDO->GetMoverComponent();
 	if (!IsValid(MoverComponentCDO)) return nullptr;
 	

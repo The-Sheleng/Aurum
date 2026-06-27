@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "MovementModifier.h"
+#include "AurumMovementModifier.h"
 #include "MovementModifier_Sprint.generated.h"
 
 class UCommonLegacyMovementSettings;
@@ -12,38 +12,38 @@ class UCommonLegacyMovementSettings;
  * @See UMovementSettings_Gait
  */
 USTRUCT(BlueprintType)
-struct AURUM_API FMovementModifier_Sprint : public FMovementModifierBase
+struct AURUM_API FMovementModifier_Sprint : public FAurumMovementModifier
 {
 	GENERATED_BODY()
 
 	virtual void OnStart(
-		UMoverComponent* MoverComp, 
+		UMoverComponent* MoverComponent, 
 		const FMoverTimeStep& TimeStep, 
 		const FMoverSyncState& SyncState, 
 		const FMoverAuxStateContext& AuxState) override;
 	
 	virtual void OnPreMovement(
-		UMoverComponent* MoverComp, 
+		UMoverComponent* MoverComponent, 
 		const FMoverTimeStep& TimeStep) override;
 	
 	virtual void OnEnd(
-		UMoverComponent* MoverComp, 
+		UMoverComponent* MoverComponent, 
 		const FMoverTimeStep& TimeStep, 
 		const FMoverSyncState& SyncState, 
 		const FMoverAuxStateContext& AuxState) override;
 
-	virtual FMovementModifierBase* Clone() const override { return new FMovementModifier_Sprint(*this); }
+	virtual FMovementModifier_Sprint* Clone() const override { return new FMovementModifier_Sprint(*this); }
 	virtual UScriptStruct* GetScriptStruct() const override { return FMovementModifier_Sprint::StaticStruct(); }
 	
 protected:
 	/** Returns the cosine of the angle between facing and movement directions. */
-	static float GetMovementCos(const UMoverComponent* MoverComp);
+	static float GetMovementCos(const UMoverComponent* MoverComponent);
 	
 	/** Applies sprint movement settings according to the current movement state. */
-	virtual void UpdateMovementSettings(UMoverComponent* MoverComp);
+	virtual void UpdateMovementSettings(UMoverComponent* MoverComponent);
 	
 	/** Restores movement settings to their default values. */
-	virtual void RevertMovementSettings(UMoverComponent* MoverComp);
+	virtual void RevertMovementSettings(UMoverComponent* MoverComponent);
 	
 private:
 	/** Cached movement direction cosine used to avoid unnecessary updates. */
@@ -62,7 +62,7 @@ private:
 	 * Replace this with a runtime aggregation system once movement
 	 * settings can be affected by multiple independent sources.
 	 */
-	static const UCommonLegacyMovementSettings* GetDefaultMovementSettings(const UMoverComponent* MoverComp);
+	static const UCommonLegacyMovementSettings* GetDefaultMovementSettings(const UMoverComponent* MoverComponent);
 };
 
 template<>
